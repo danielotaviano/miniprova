@@ -32,7 +32,7 @@ pub async fn login_html() -> impl IntoResponse {
     let mut params = HashMap::new();
     params.insert("url", generate_github_url());
 
-    render_template("login", params.into()).to_html_response()
+    render_template("auth/login", params.into()).to_html_response()
 }
 
 pub async fn auth_callback(

@@ -20,5 +20,5 @@ pub async fn me_html(Extension(current_user): Extension<AuthState>) -> impl Into
         Some(u) => u,
     };
 
-    render_template("me", user.into()).to_html_response()
+    render_template("user/me", user.into()).to_html_response()
 }

@@ -1,12 +1,17 @@
 mod auth;
+mod class;
 mod custom;
 mod infra;
 mod middleware;
+mod teacher;
 mod user;
 mod utils;
 mod view;
 
-use axum::{routing::get, Error, Router};
+use axum::{
+    routing::{get, post},
+    Error, Router,
+};
 use dotenv::dotenv;
 use infra::db::start_connection;
 use middleware::auth::auth_middleware;
@@ -23,6 +28,8 @@ async fn main() -> Result<(), Error> {
 
     let app = Router::new()
         .route("/me", get(user::controller::me_html))
+        .route("/teacher", get(teacher::controller::home_html))
+        .route("/class", post(class::controller::create_class))
         .layer(axum::middleware::from_fn(auth_middleware))
         .route("/login", get(auth::controller::login_html))
         .route("/oauth", get(auth::controller::auth_callback));

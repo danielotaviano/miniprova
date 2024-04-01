@@ -8,11 +8,11 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(id: String, name: String, avatar_url: String) -> Self {
+    pub fn new(id: &str, name: &str, avatar_url: &str) -> Self {
         Self {
-            id,
-            name,
-            avatar_url,
+            id: id.to_string(),
+            name: name.to_string(),
+            avatar_url: avatar_url.to_string(),
         }
     }
 
