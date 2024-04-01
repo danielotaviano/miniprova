@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Page</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
+    <style>
+        .welcome-container {
+            max-width: 330px;
+            padding: 15px;
+            margin: auto;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="welcome-container">
+        <img class="avatar" src="{{context.avatar_url}}" alt="Avatar">
+        <h2>Welcome, {{context.name}}!</h2>
+        <p>Choose which role you want to use.</p>
+        <button class="btn btn-primary">Teacher</button>
+        <button class="btn btn-secondary">Student</button>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>

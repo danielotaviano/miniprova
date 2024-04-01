@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniProva</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .login-container {
+            max-width: 330px;
+            padding: 15px;
+            margin: auto;
+        }
+
+        .github-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN PAGE FOR A MINIPROVA, THE UNIQUE LOGIN IS GITHUB OAUTH -->
+    <div class="login-container"
+        style="display: flex; flex-direction: column; justify-items: center; align-items: center;">
+        <h2>Login with GitHub</h2>
+        <a href="{{context.url}}" class="github-btn">Login with GitHub</a>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>
