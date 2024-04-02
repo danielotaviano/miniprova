@@ -65,17 +65,17 @@
       <div class="col-md-8">
         <h2>Classes List</h2>
         <ul class="list-group">
-          {% for class in context %}
+          {% for payload in context %}
           <li class="list-group-item">
             <a data-toggle="collapse" href="#class{{ loop.index }}" role="button" aria-expanded="false"
               aria-controls="class{{ loop.index }}">
-              {{ class.code }} - {{ class.name }}
+              {{ payload.class.code }} - {{ payload.class.name }}
             </a>
             <div class="collapse" id="class{{ loop.index }}">
-              <p>Class Code: {{ class.code }}</p>
-              <p>Class Name: {{ class.name }}</p>
-              <p>Class Description: {{ class.description }}</p>
-              <p>Number of Students Enrolled: 10 TODO!</p>
+              <p>Class Code: {{ payload.class.code }}</p>
+              <p>Class Name: {{ payload.class.name }}</p>
+              <p>Class Description: {{ payload.class.description }}</p>
+              <p>Number of Students Enrolled: {{payload.count}}</p>
             </div>
           </li>
           {% endfor %}

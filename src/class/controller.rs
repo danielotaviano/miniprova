@@ -11,6 +11,21 @@ use crate::middleware::auth::AuthState;
 use super::{model::Class, service};
 
 #[derive(Deserialize, Serialize)]
+pub struct EnrollClassControllerParams {
+    class_id: String,
+}
+
+impl EnrollClassControllerParams {
+    pub fn validate(&self) -> Result<&Self, &'static str> {
+        if self.class_id.len() == 0 {
+            return Err("code is required");
+        }
+
+        Ok(self)
+    }
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct CreateClassControllerParams {
     code: String,
     name: String,
@@ -58,5 +73,20 @@ pub async fn create_class(
         )
             .into_response(),
         Ok(_) => Redirect::to("/teacher").into_response(),
+    }
+}
+
+pub async fn enroll(
+    Extension(current_user): Extension<AuthState>,
+    Form(params): Form<EnrollClassControllerParams>,
+) -> impl IntoResponse {
+    let valid_params = match params.validate() {
+        Err(err) => return (StatusCode::BAD_REQUEST, err).into_response(),
+        Ok(params) => params,
+    };
+
+    match service::enroll_student(&current_user.get_user_id(), &valid_params.class_id).await {
+        Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
+        Ok(_) => Redirect::to("/student").into_response(),
     }
 }

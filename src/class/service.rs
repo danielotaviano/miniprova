@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::class::repository;
+use crate::{class::repository, user};
 
 use super::model::Class;
 
@@ -17,6 +17,27 @@ pub async fn create(class: Class) -> Result<(), Box<dyn Error>> {
     }
 }
 
-pub async fn get_by_user_id(user_id: &str) -> Result<Vec<Class>, Box<dyn Error>> {
-    repository::get_by_user_id(user_id).await
+pub async fn get_by_user_id_with_student_count(
+    user_id: &str,
+) -> Result<Vec<(Class, i64)>, Box<dyn Error>> {
+    repository::get_by_user_id_with_student_count(user_id).await
+}
+
+pub async fn get_by_user_where_is_not_enrolled_with_student_count(
+    user_id: &str,
+) -> Result<Vec<(Class, i64)>, Box<dyn Error>> {
+    repository::get_by_student_where_is_not_enrolled_with_student_count(user_id).await
+}
+
+pub async fn enroll_student(student_id: &str, class_id: &str) -> Result<(), Box<dyn Error>> {
+    let user = user::service::get_user(student_id)
+        .await?
+        .ok_or("Student not found")?;
+    let class = repository::get_class(class_id)
+        .await?
+        .ok_or("Class not found")?;
+
+    repository::enroll_student(&user.get_id(), &class.get_id()).await?;
+
+    Ok(())
 }

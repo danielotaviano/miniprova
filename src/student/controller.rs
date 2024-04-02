@@ -22,18 +22,24 @@ impl From<(Class, i64)> for HomeHtmlContextModel {
 }
 
 pub async fn home_html(Extension(current_user): Extension<AuthState>) -> impl IntoResponse {
-    match class::service::get_by_user_id_with_student_count(&current_user.get_user_id()).await {
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Error getting the classes",
-        )
-            .into_response(),
+    match class::service::get_by_user_where_is_not_enrolled_with_student_count(
+        &current_user.get_user_id(),
+    )
+    .await
+    {
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Error getting the classes",
+            )
+                .into_response()
+        }
         Ok(classes) => {
-            let context: Vec<HomeHtmlContextModel> = classes
+            let context: Vec<_> = classes
                 .into_iter()
                 .map(HomeHtmlContextModel::from)
                 .collect();
-            render_template("teacher/home", context.into()).to_html_response()
+            render_template("student/home", context.into()).to_html_response()
         }
     }
 }

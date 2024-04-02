@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Home Page</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Classes</h2>
+        {% for payload in context %}
+        <div id="accordion">
+          <div class="card">
+            <div class="card-header" id="heading{{ loop.index }}">
+              <h5 class="mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#collapse{{ loop.index }}"
+                  aria-expanded="true" aria-controls="collapse{{ loop.index }}">
+                  {{ payload.class.code }} - {{ payload.class.name }}
+                </button>
+              </h5>
+            </div>
+            <div id="collapse{{ loop.index }}" class="collapse" aria-labelledby="heading{{ loop.index }}"
+              data-parent="#accordion">
+              <div class="card-body">
+                {{ payload.class.description }}<br>
+                Students Enrolled: {{payload.count}}<br>
+                <form action="/class/enroll" method="POST">
+                  <input type="hidden" name="class_id" value="{{ payload.class.id }}">
+                  <button class="btn btn-primary">Enroll</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+      <div class="col-md-6">
+        <h2>Online Exams</h2>
+        <div class="card">
+          <div class="card-header">
+            Class Code - Class Name
+          </div>
+          <div class="row" style="display: flex; align-items: start; justify-content: start;">
+            <div class="card-body"
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <h5 class="card-title">Prova 01</h5>
+              <p class="card-text">01/02/03 - 01/02/03</p>
+              <a href="#" class="btn btn-primary">Go to Exam</a>
+            </div>
+            <div class="card-body"
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <h5 class="card-title">Prova 01</h5>
+              <p class="card-text">01/02/03 - 01/02/03</p>
+              <a href="#" class="btn btn-primary">Go to Exam</a>
+            </div>
+            <div class="card-body"
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <h5 class="card-title">Prova 01</h5>
+              <p class="card-text">01/02/03 - 01/02/03</p>
+              <a href="#" class="btn btn-primary">Go to Exam</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
