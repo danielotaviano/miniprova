@@ -41,3 +41,7 @@ pub async fn enroll_student(student_id: &str, class_id: &str) -> Result<(), Box<
 
     Ok(())
 }
+
+pub async fn is_teacher(teacher_id: &str, class_id: &str) -> Result<bool, Box<dyn Error>> {
+    repository::is_teacher(teacher_id, class_id).await
+}

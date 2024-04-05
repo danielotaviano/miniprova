@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Create Exam</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Create Exam</h1>
+        <form id="examForm">
+            <div class="form-group">
+                <label for="name">Class Name</label>
+                <input type="text" class="form-control" id="class_name" name="class_name" value="IMD2020 - FARMACOLOGIA"
+                    disabled>
+            </div>
+            <div class="form-group">
+                <label for="name">Exam Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">End Date</label>
+                <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+            </div>
+            <div id="questions">
+                <!-- Questions will be added here dynamically -->
+            </div>
+            <button type="button" class="btn btn-primary" id="addQuestion">Add Question</button>
+            <button type="submit" class="btn btn-success" id="submitExam">Submit Exam</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            var questionCount = 0;
+
+            $('#addQuestion').click(function () {
+                questionCount++;
+                var questionHTML = `
+                    <div class="form-group">
+                        <label for="question${questionCount}">Question ${questionCount}</label>
+                        <input type="text" class="form-control" id="question${questionCount}" name="question${questionCount}" required>
+                        <div id="answers${questionCount}">
+                            <!-- Answers will be added here dynamically -->
+                        </div>
+                        <button type="button" class="btn btn-secondary addAnswer mt-1" data-question="${questionCount}">Add Answer</button>
+                    </div>
+                `;
+                $('#questions').append(questionHTML);
+            });
+
+            $(document).on('click', '.addAnswer', function () {
+                var questionId = $(this).data('question');
+                var answerHTML = `
+                    <div class="mt-1">
+                        <input type="radio" name="correctAnswer${questionId}" required>
+                        <input type="text" name="answer${questionId}" required>
+                    </div> 
+                `;
+                $('#answers' + questionId).append(answerHTML);
+            });
+
+            $('#examForm').submit(function (e) {
+                e.preventDefault();
+                var startDate = new Date($('#startDate').val());
+                var endDate = new Date($('#endDate').val());
+                var now = new Date();
+                if (questionCount < 1) {
+                    alert('Please add at least one question.');
+                    return false;
+                }
+                for (let i = 1; i <= questionCount; i++) {
+                    if ($('#answers' + i).children().length < 1) {
+                        alert('Each question must have at least one answer.');
+                        return false;
+                    }
+                }
+                if (startDate < now) {
+                    alert('Start date must be in the future.');
+                    return false;
+                }
+                if (endDate <= startDate) {
+                    alert('End date must be after start date.');
+                    return false;
+                }
+
+
+
+                const examName = $('#examForm').find('input[name="name"]').val();
+                const questions = [];
+                for (let i = 1; i <= questionCount; i++) {
+                    const question = $('#examForm').find(`input[name="question${i}"]`).val();
+                    const answers = [];
+                    const correctAnswer = $('#examForm').find(`input[name="correctAnswer${i}"]:checked`).val();
+                    const htmlAnswers = $('#examForm').find(`input[name="answer${i}"]`);
+
+                    htmlAnswers.each(function (index, element) {
+                        answers.push({
+                            answer: $(element).val(),
+                            isCorrect: $(element).prev().is(':checked')
+                        });
+                    });
+
+                    questions.push({
+                        question: question,
+                        answers: answers,
+                    });
+                }
+
+                const payload = {
+                    name: examName,
+                    startDate: startDate.getTime(),
+                    endDate: endDate.getTime(),
+                    questions: questions
+                }
+
+
+                $.ajax({
+                    url: '/teacher/class/{{context}}/create-exam',
+                    type: 'POST',
+                    data: JSON.stringify(payload),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        alert('Exam created successfully.');
+                        window.location.href = '/teacher/class/{{context}}/exams';
+                    },
+                    error: function (error) {
+                        alert('An error occurred. Please try again.');
+                    }
+                }
+                )
+
+            });
+        });
+    </script>
+</body>
+
+</html>

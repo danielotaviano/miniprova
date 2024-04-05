@@ -62,7 +62,13 @@ pub async fn get_by_user_id_with_student_count(
     let classes_with_student_count: Vec<_> = rows
         .into_iter()
         .map(|row| {
-            let class = Class::new(&row.code, &row.name, &row.description, &row.user_id);
+            let class = Class::new_with_id(
+                &row.id,
+                &row.code,
+                &row.name,
+                &row.description,
+                &row.user_id,
+            );
             let count = row.student_total.unwrap_or(0);
 
             (class, count)
@@ -99,7 +105,13 @@ pub async fn get_by_student_where_is_not_enrolled_with_student_count(
     let classes_with_student_count: Vec<_> = rows
         .into_iter()
         .map(|row| {
-            let class = Class::new(&row.code, &row.name, &row.description, &row.user_id);
+            let class = Class::new_with_id(
+                &row.id,
+                &row.code,
+                &row.name,
+                &row.description,
+                &row.user_id,
+            );
             let count = row.student_total.unwrap_or(0);
 
             (class, count)
@@ -140,4 +152,29 @@ pub async fn get_class(class_id: &str) -> Result<Option<Class>, Box<dyn Error>> 
     .await?;
 
     Ok(class)
+}
+
+pub async fn is_teacher(teacher_id: &str, class_id: &str) -> Result<bool, Box<dyn Error>> {
+    let is = sqlx::query!(
+        r#"
+        select
+            exists (
+            select
+                1
+            from
+                "class" c
+            where
+                id = $1
+                and user_id = $2
+                ) "exists";
+        "#,
+        class_id,
+        teacher_id
+    )
+    .fetch_one(get_database())
+    .await?
+    .exists
+    .unwrap_or(false);
+
+    Ok(is)
 }

@@ -9,7 +9,7 @@ use crate::{
     view::render_template,
 };
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct HomeHtmlContextModel {
     class: Class,
     count: i64,
@@ -39,6 +39,7 @@ pub async fn home_html(Extension(current_user): Extension<AuthState>) -> impl In
                 .into_iter()
                 .map(HomeHtmlContextModel::from)
                 .collect();
+
             render_template("student/home", context.into()).to_html_response()
         }
     }

@@ -76,6 +76,7 @@
               <p>Class Name: {{ payload.class.name }}</p>
               <p>Class Description: {{ payload.class.description }}</p>
               <p>Number of Students Enrolled: {{payload.count}}</p>
+              <a href="/teacher/class/{{ payload.class.id }}/create-exam" class="btn btn-primary">Create Exam</a>
             </div>
           </li>
           {% endfor %}

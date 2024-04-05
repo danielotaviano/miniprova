@@ -1,6 +1,7 @@
 mod auth;
 mod class;
 mod custom;
+mod exam;
 mod infra;
 mod middleware;
 mod student;
@@ -30,9 +31,13 @@ async fn main() -> Result<(), Error> {
     let app = Router::new()
         .route("/me", get(user::controller::me_html))
         .route("/teacher", get(teacher::controller::home_html))
+        .route("/teacher/class", post(class::controller::create_class))
+        .route(
+            "/teacher/class/:class_id/create-exam",
+            get(exam::controller::create_html).post(exam::controller::create),
+        )
         .route("/student", get(student::controller::home_html))
-        .route("/class", post(class::controller::create_class))
-        .route("/class/enroll", post(class::controller::enroll))
+        .route("/student/class/enroll", post(class::controller::enroll))
         .layer(axum::middleware::from_fn(auth_middleware))
         .route("/login", get(auth::controller::login_html))
         .route("/oauth", get(auth::controller::auth_callback));
