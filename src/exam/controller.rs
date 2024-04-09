@@ -126,14 +126,8 @@ pub async fn create(
 
     exam.set_questions(questions);
 
-    match class::service::is_teacher(&current_user.get_user_id(), &class_id).await {
-        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        Ok(false) => return StatusCode::UNAUTHORIZED.into_response(),
-        _ => (),
-    };
-
-    match service::save(exam).await {
-        Err(err) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    match service::save(exam, &current_user.get_user_id(), &class_id).await {
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Ok(_) => StatusCode::OK.into_response(),
     }
 }

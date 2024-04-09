@@ -31,6 +31,7 @@ pub fn render_template<T: Serialize>(template_name: &str, data: Option<T>) -> St
         .unwrap_or_else(|_| panic!("Failed to get template: {}", template_name));
 
     let mut env = Environment::new();
+    env.add_global("TIMEZONE", "America/Sao_Paulo");
     env.add_filter("to_seconds", |value: i64| -> i64 { value / 1000 });
     minijinja_contrib::add_to_environment(&mut env);
 

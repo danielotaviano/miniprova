@@ -10,6 +10,8 @@ use crate::{
     view::render_template,
 };
 
+use super::service;
+
 #[derive(Serialize, Debug)]
 struct ClassToSubscribe {
     class: Class,
@@ -134,7 +136,7 @@ pub async fn exam_result_html(
     Extension(current_user): Extension<AuthState>,
     Path(exam_id): Path<String>,
 ) -> impl IntoResponse {
-    let exam = match exam::service::get_student_exam(&exam_id, &current_user.get_user_id()).await {
+    let exam = match service::get_exam_result(&exam_id, &current_user.get_user_id()).await {
         Err(_) => {
             return (StatusCode::INTERNAL_SERVER_ERROR, "Error getting the exam").into_response();
         }
@@ -145,10 +147,6 @@ pub async fn exam_result_html(
         None => return (StatusCode::NOT_FOUND, "Exam not found").into_response(),
         Some(exam) => exam,
     };
-
-    if exam.0.end_date > chrono::Utc::now().timestamp_millis() {
-        return (StatusCode::FORBIDDEN, "Exam is not available yet").into_response();
-    }
 
     let correct_answers_count = exam
         .0
@@ -193,7 +191,7 @@ pub async fn save_answer(
     )
     .await
     {
-        Err(err) => {
+        Err(_) => {
             return (StatusCode::INTERNAL_SERVER_ERROR, "Error saving the answer").into_response();
         }
         Ok(_) => StatusCode::OK.into_response(),

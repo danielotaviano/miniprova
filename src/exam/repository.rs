@@ -1,8 +1,8 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime};
 use sqlx::{Postgres, Transaction};
 
 use crate::{class::model::Class, infra::db::get_database, user::model::User};
-use std::{collections::HashMap, error::Error, vec};
+use std::{error::Error, vec};
 
 use super::model::{Answer, Exam, Question, StudentAnswer};
 
@@ -78,34 +78,6 @@ pub async fn list_exam_group_by_class_without_relations_by_student(
         .collect();
 
     Ok(payload)
-}
-
-pub async fn get_without_relations(exam_id: &str) -> Result<Option<Exam>, Box<dyn Error>> {
-    let exam = sqlx::query!(
-        r#"
-            SELECT *
-            FROM exam
-            WHERE id = $1
-        "#,
-        exam_id,
-    )
-    .fetch_optional(get_database())
-    .await?;
-
-    let exam = exam.map(|row| {
-        let start_date = row.start_date.and_utc().timestamp_millis();
-        let end_date = row.end_date.and_utc().timestamp_millis();
-
-        Exam::new_with_id(
-            &row.id,
-            &row.name,
-            &start_date,
-            &end_date,
-            &row.class_id,
-            vec![],
-        )
-    });
-    Ok(exam)
 }
 
 pub async fn get_with_relations(exam_id: &str) -> Result<Option<Exam>, Box<dyn Error>> {
@@ -242,79 +214,6 @@ pub async fn list_exam_by_class_id_without_relations(
     }
 
     Ok(exams)
-}
-
-pub async fn list_exam_by_class_id_with_relations(
-    class_id: &str,
-) -> Result<Vec<Exam>, Box<dyn Error>> {
-    let rows = sqlx::query!(
-        r#"
-            SELECT e.id as exam_id, e.name as exam_name, e.start_date, e.end_date, e.class_id,
-                   q.id as question_id, q.question, 
-                   a.id as answer_id, a.answer, a.is_correct
-            FROM exam e
-            LEFT JOIN question q ON e.id = q.exam_id
-            LEFT JOIN answer a ON q.id = a.question_id
-            WHERE e.class_id = $1
-        "#,
-        class_id
-    )
-    .fetch_all(get_database())
-    .await?;
-
-    let mut exams: HashMap<String, Exam> = HashMap::new();
-
-    for row in rows {
-        let exam_id = row.exam_id;
-        let exam = exams.entry(exam_id.clone()).or_insert_with(|| {
-            let start_date_time = row.start_date.and_utc().timestamp_millis();
-            let end_date_time = row.end_date.and_utc().timestamp_millis();
-
-            Exam::new_with_id(
-                &exam_id,
-                &row.exam_name,
-                &start_date_time,
-                &end_date_time,
-                &row.class_id,
-                vec![],
-            )
-        });
-
-        let question_id = row.question_id;
-
-        let question_index = exam
-            .questions
-            .iter()
-            .position(|q| q.get_id() == &question_id);
-
-        match question_index {
-            Some(index) => {
-                let answer = Answer {
-                    answer: row.answer,
-                    id: row.answer_id,
-                    is_correct: row.is_correct,
-                    question_id,
-                };
-
-                exam.questions[index].answers.push(answer);
-            }
-            None => {
-                let mut question =
-                    Question::new_with_id(&question_id, &row.question, &exam.get_id(), vec![]);
-                let answer = Answer {
-                    answer: row.answer,
-                    id: row.answer_id,
-                    is_correct: row.is_correct,
-                    question_id,
-                };
-
-                question.answers.push(answer);
-                exam.questions.push(question);
-            }
-        }
-    }
-
-    Ok(exams.into_values().collect())
 }
 
 pub async fn save(exam: Exam) -> Result<(), Box<dyn Error>> {
@@ -457,15 +356,18 @@ pub async fn get_students_results(
         r#"
         select
             u.*,
-            jsonb_agg(sa.*) 
+            jsonb_agg(sa.*)
         from
             class_student cs
         inner join exam e on
             e.class_id = cs.class_id
+        inner join question q on
+            q.exam_id = e.id
         inner join "user" u on
             u.id = cs.student_id
         left join student_answer sa on
             sa.student_id = u.id
+            and sa.question_id = q.id
         where
             e.id = $1
         group by

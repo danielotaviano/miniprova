@@ -5,16 +5,16 @@ use std::time::UNIX_EPOCH;
 
 use crate::{
     class::{self, model::Class},
-    exam::service,
     user::model::User,
 };
 
-use super::{
-    model::{Exam, StudentAnswer},
-    repository,
-};
+use super::{model::Exam, repository};
 
-pub async fn save(exam: Exam) -> Result<(), Box<dyn Error>> {
+pub async fn save(exam: Exam, teacher_id: &str, class_id: &str) -> Result<(), Box<dyn Error>> {
+    if !class::service::is_teacher(teacher_id, class_id).await? {
+        return Err("Unauthorized".into());
+    }
+
     let questions = exam.get_questions();
 
     if questions.is_empty() {
