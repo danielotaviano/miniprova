@@ -21,7 +21,15 @@
               Start Date: {{ (exam.start_date|to_seconds|datetimeformat) }}<br>
               End Date: {{ (exam.end_date|to_seconds|datetimeformat) }}<br>
             </p>
-            <a href="/teacher/exam/{{exam.id}}/results" class="btn btn-primary">Exam results</a>
+            <div class="d-flex justify-content-between">
+              <a href="/teacher/exam/{{exam.id}}/results" class="btn btn-primary">Exam results</a>
+              {% if exam.start_date|to_seconds > now() %}
+              <div>
+                <a href="/teacher/exam/{{exam.id}}/edit" class="btn btn-warning">Edit</a>
+                <button onclick="deleteExam('{{exam.id}}')" class="btn btn-danger">Delete</button>
+              </div>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
@@ -31,5 +39,13 @@
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
 </body>
+
+<script>
+  function deleteExam(id) {
+    fetch(`/teacher/exam/${id}/delete`, {
+      method: 'DELETE',
+    }).then(res => window.location.reload());
+  }
+</script>
 
 </html>

@@ -12,7 +12,7 @@ mod view;
 
 use axum::{
     response::Redirect,
-    routing::{get, post},
+    routing::{delete, get, post, put},
     Error, Router,
 };
 use dotenv::dotenv;
@@ -42,9 +42,18 @@ async fn main() -> Result<(), Error> {
             get(teacher::controller::exam_results_html),
         )
         .route(
+            "/teacher/exam/:exam_id/delete",
+            delete(exam::controller::delete),
+        )
+        .route(
+            "/teacher/exam/:exam_id/edit",
+            get(exam::controller::edit_html),
+        )
+        .route(
             "/teacher/class/:class_id/exams",
             get(class::controller::list_exams),
         )
+        .route("/teacher/exam/:exam_id", put(exam::controller::edit))
         .route("/student", get(student::controller::home_html))
         .route("/student/class/enroll", post(class::controller::enroll))
         .route(

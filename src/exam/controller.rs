@@ -1,3 +1,5 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use axum::{
     extract::{Json, Path},
     response::{IntoResponse, Redirect},
@@ -15,7 +17,7 @@ use crate::{
     view::render_template,
 };
 
-use super::{model::Exam, service};
+use super::{model::Exam, repository, service};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateAnswerControllerParams {
@@ -83,6 +85,61 @@ impl CreateExamControllerParams {
         }
 
         Ok(self)
+    }
+}
+
+pub async fn edit(
+    Extension(current_user): Extension<AuthState>,
+    Path(exam_id): Path<String>,
+    Json(params): Json<CreateExamControllerParams>,
+) -> impl IntoResponse {
+    let valid_params = match params.validate() {
+        Err(err) => return (StatusCode::BAD_REQUEST, err).into_response(),
+        Ok(params) => params,
+    };
+
+    let saved_exam = match service::get_with_relations(&exam_id).await {
+        Ok(Some(exam)) => exam,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    let mut exam = Exam::new_with_id(
+        &exam_id,
+        &valid_params.name,
+        &valid_params.start_date,
+        &valid_params.end_date,
+        &saved_exam.class_id,
+        vec![],
+    );
+
+    let questions: Vec<_> = valid_params
+        .questions
+        .iter()
+        .map(|question| {
+            let mut question_model = Question::new(&question.question, exam.get_id(), vec![]);
+
+            let answers: Vec<_> = question
+                .answers
+                .iter()
+                .map(|answer| {
+                    Answer::new(&answer.answer, &answer.is_correct, question_model.get_id())
+                })
+                .collect();
+
+            question_model.set_answers(answers);
+
+            question_model
+        })
+        .collect();
+
+    exam.set_questions(questions);
+
+    match service::edit(exam, &current_user.get_user_id()).await {
+        Err(_) => {
+            StatusCode::INTERNAL_SERVER_ERROR.into_response()
+        }
+        Ok(_) => StatusCode::OK.into_response(),
     }
 }
 
@@ -158,4 +215,42 @@ pub async fn create_html(
     };
 
     render_template("exam/create", class.into()).to_html_response()
+}
+
+pub async fn delete(
+    Extension(current_user): Extension<AuthState>,
+    Path(exam_id): Path<String>,
+) -> impl IntoResponse {
+    match service::delete(&exam_id, &current_user.get_user_id()).await {
+        Ok(_) => StatusCode::OK.into_response(),
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    }
+}
+
+pub async fn edit_html(
+    Extension(current_user): Extension<AuthState>,
+    Path(exam_id): Path<String>,
+) -> impl IntoResponse {
+    let exam = match repository::get_with_relations(&exam_id).await {
+        Ok(Some(exam)) => exam,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    let is_teacher = class::service::is_teacher(&current_user.get_user_id(), &exam.class_id).await;
+
+    if !is_teacher.unwrap_or(false) {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+
+    if exam.start_date
+        <= SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_millis() as i64
+    {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+
+    render_template("teacher/edit-exam", exam.into()).to_html_response()
 }

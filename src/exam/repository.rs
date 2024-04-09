@@ -357,7 +357,7 @@ pub async fn get_students_results(
         r#"
         select
             u.*,
-            jsonb_agg(sa.*)
+            COALESCE(jsonb_agg(sa.*) FILTER (WHERE sa IS NOT NULL), '[]') "jsonb_agg"
         from
             class_student cs
         inner join exam e on
@@ -436,5 +436,48 @@ pub async fn get_students_results(
         })
         .collect();
 
+
     Ok(payload)
 }
+
+pub async fn delete_with_relations(exam_id: &str) -> Result<(), Box<dyn Error>> {
+    let mut tx = get_database().begin().await?;
+
+    sqlx::query!(
+        r#"
+        DELETE FROM answer
+        WHERE question_id IN (
+            SELECT id FROM question WHERE exam_id = $1
+        )
+        "#,
+        exam_id
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    // Delete questions
+    sqlx::query!(
+        r#"
+        DELETE FROM question
+        WHERE exam_id = $1
+        "#,
+        exam_id
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    sqlx::query!(
+        r#"
+        DELETE FROM exam
+        WHERE id = $1
+        "#,
+        exam_id
+    )
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+

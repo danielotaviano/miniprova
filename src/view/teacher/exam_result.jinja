@@ -26,8 +26,8 @@
         <tr>
           <td>{{ student.name }}</td>
           <td>{{ student.answers_count }}/{{ context.total_questions }}</td>
-          <td>{{ student.first_answer_date|to_seconds|datetimeformat }}</td>
-          <td>{{ student.last_update|to_seconds|datetimeformat }}</td>
+          <td>{{ student.first_answer_date|to_seconds|datetimeformat if student.first_answer_date is not none else '' }}</td>
+          <td>{{ student.last_update|to_seconds|datetimeformat if student.last_update is not none else '' }}</td>   
           <td>{{ student.correct_answers_count }}/{{ context.total_questions }}</td>
         </tr>
         {% endfor %}

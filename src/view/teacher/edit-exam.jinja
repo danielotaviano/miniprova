@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+{% set exam = context %}
+
+<head>
+  <title>Edit Exam</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+  <div class=" container">
+    <h1>Edit Exam</h1>
+    <form id="examForm">
+      <div class="form-group">
+        <label for="name">Exam Name</label>
+        <input type="text" class="form-control" id="name" name="name" required value="{{exam.name}}">
+      </div>
+      <div class="form-group">
+        <label for="startDate">Start Date</label>
+        <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+      </div>
+      <div class="form-group">
+        <label for="endDate">End Date</label>
+        <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+      </div>
+      <div id="questions">
+        {# will be added dinamicaly #}
+      </div>
+      <button type="button" class="btn btn-primary" id="addQuestion">Add Question</button>
+      <button type="submit" class="btn btn-success" id="submitExam">Submit Exam</button>
+    </form>
+  </div>
+
+
+  <script>
+    let questionsToRender = {{ exam.questions }};
+
+    function renderQuestions() {
+      let questions = document.getElementById('questions');
+      questions.innerHTML = '';
+      questionsToRender.forEach((question, index) => {
+        let questionCount = index + 1;
+        let questionDiv = document.createElement('div');
+        questionDiv.classList.add('form-group');
+        questionDiv.innerHTML = `
+        <label for="question${questionCount}">Question ${questionCount}</label>
+        <i class="fa fa-trash" onclick="deleteQuestion(${index})"></i>
+        <input type="text" class="form-control" id="question${questionCount}" name="question${questionCount}" required value="${question.question}">
+          <div id="answers${questionCount}">
+                <!-- Answers will be added here dynamically -->
+          </div>
+          <button type="button" class="btn btn-secondary addAnswer mt-1" data-question="${questionCount}">Add Answer</button>
+          `;
+        questions.appendChild(questionDiv);
+        renderAnswers(question.answers, questionCount);
+      });
+    }
+    function deleteQuestion(index) {
+      if (questionsToRender.length === 1) {
+        alert('You must have at least one question.');
+        return;
+      }
+
+      questionsToRender.splice(index, 1);
+      renderQuestions();
+    }
+
+    function renderAnswers(answers, questionId) {
+      let answersDiv = document.getElementById(`answers${questionId}`);
+      answersDiv.innerHTML = '';
+      answers.forEach((answer, index) => {
+        let answerCount = index + 1;
+        let answerDiv = document.createElement('div');
+        answerDiv.classList.add('form-group');
+        answerDiv.innerHTML = `
+          <div class="mt-1">
+            <input type="radio" name="correctAnswer${questionId}" required ${answer.is_correct ? 'checked' : ''}>
+            <input type="text" name="answer${questionId}" required value="${answer.answer}">
+          </div> 
+        `;
+        answersDiv.appendChild(answerDiv);
+      });
+    }
+
+    function updateQuestions() {
+      questionsToRender.forEach((question, index) => {
+        let questionCount = index + 1;
+        let questionInput = document.getElementById(`question${questionCount}`);
+        question.question = questionInput.value;
+
+        let answersDiv = document.getElementById(`answers${questionCount}`);
+        let answerInputs = answersDiv.querySelectorAll(`input[name="answer${questionCount}"]`);
+        let correctAnswerInputs = answersDiv.querySelectorAll(`input[name="correctAnswer${questionCount}"]`);
+
+        answerInputs.forEach((answerInput, index) => {
+          question.answers[index].answer = answerInput.value;
+          question.answers[index].is_correct = correctAnswerInputs[index].checked;
+        });
+      });
+    }
+
+
+    $(document).ready(function () {
+      renderQuestions();
+
+      $('#addQuestion').click(function () {
+        updateQuestions();
+
+        questionsToRender.push({
+          question: '',
+          answers: [{
+            answer: '',
+            is_correct: false
+          }]
+        });
+
+        renderQuestions();
+      });
+
+      $(document).on('click', '.addAnswer', function () {
+        updateQuestions();
+
+        let questionId = $(this).data('question');
+        questionsToRender[questionId - 1].answers.push({
+          answer: '',
+          is_correct: false
+        });
+
+        renderQuestions();
+      });
+
+
+      $('#examForm').submit(function (e) {
+        e.preventDefault();
+
+        updateQuestions();
+
+        let name = $('#name').val();
+        let startDate = new Date($('#startDate').val());
+        let endDate = new Date($('#endDate').val());
+
+        if (startDate >= endDate) {
+          alert('End date must be later than start date.');
+          return;
+        }
+
+        if (startDate < new Date()) {
+          alert('Start date must be in the future.');
+          return;
+        }
+
+        if (questionsToRender.length === 0) {
+          alert('You must have at least one question.');
+          return;
+        }
+
+        let questions = questionsToRender.map((question, index) => {
+          let questionCount = index + 1;
+
+          if (question.answers.length === 0) {
+            alert(`Question ${questionCount} must have at least one answer.`);
+            return;
+          }
+
+          let correctAnswers = question.answers.filter(answer => answer.is_correct);
+
+          if (correctAnswers.length === 0) {
+            alert(`Question ${questionCount} must have at least one correct answer.`);
+            return;
+          }
+
+          let answers = question.answers.map((answer, index) => {
+            return {
+              answer: answer.answer,
+              isCorrect: answer.is_correct
+            };
+          });
+
+          return {
+            question: question.question,
+            answers: answers
+          };
+        });
+
+        let data = {
+          name: name,
+          startDate: startDate.getTime(),
+          endDate: endDate.getTime(),
+          questions: questions
+        };
+
+
+        $.ajax({
+          url: `/teacher/exam/{{ exam.id }}`,
+          type: 'PUT',
+          data: JSON.stringify(data),
+          contentType: 'application/json',
+          success: function (response) {
+            alert('Success');
+            window.location.href = `/teacher/class/{{ exam.class_id }}/exams`;
+          },
+          error: function (error) {
+            alert('Failure');
+          }
+        });
+      });
+    });
+  </script>
+
+
+
+  <script>
+    window.onload = function () {
+      var startDate = new Date({{ exam.start_date }} - 1000 * 60 * 60 * 3);
+    var endDate = new Date({{ exam.end_date }} - 1000 * 60 * 60 * 3);
+
+    document.getElementById('startDate').value = startDate.toISOString().substring(0, 16);
+    document.getElementById('endDate').value = endDate.toISOString().substring(0, 16);
+  };
+  </script>
+</body>
+
+</html>
