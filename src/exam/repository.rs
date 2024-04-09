@@ -1,7 +1,7 @@
 use chrono::{DateTime, NaiveDateTime};
 use sqlx::{Postgres, Transaction};
 
-use crate::{class::model::Class, infra::db::get_database, user::model::User};
+use crate::{class::model::Class, infra::db::get_database, user::model::User, utils::generate_id};
 use std::{error::Error, vec};
 
 use super::model::{Answer, Exam, Question, StudentAnswer};
@@ -334,11 +334,12 @@ pub async fn save_answer(
 ) -> Result<(), Box<dyn Error>> {
     sqlx::query!(
         r#"
-            INSERT INTO student_answer (student_id, question_id, answer_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO student_answer (id, student_id, question_id, answer_id)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (student_id, question_id) DO UPDATE
-            SET answer_id = $3, updated_at = now()
+            SET answer_id = $4, updated_at = now()
         "#,
+        generate_id(),
         student_id,
         question_id,
         answer_id

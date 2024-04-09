@@ -109,7 +109,7 @@ pub async fn get_github_user(token: &str) -> Result<GithubUserResponse, Box<dyn 
     };
 
     let response: GithubUserResponse = match response.json().await {
-        Err(err) => {
+        Err(_) => {
             return Err("Error when trying to retrieve user".into());
         }
         Ok(response) => response,

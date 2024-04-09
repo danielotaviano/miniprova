@@ -2,7 +2,7 @@
 
 
 CREATE TABLE student_answer (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR PRIMARY KEY,
     student_id VARCHAR NOT NULL,
     question_id VARCHAR NOT NULL,
     answer_id VARCHAR NOT NULL,

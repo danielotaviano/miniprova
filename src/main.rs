@@ -18,7 +18,6 @@ use axum::{
 use dotenv::dotenv;
 use infra::db::start_connection;
 use middleware::auth::auth_middleware;
-use minijinja::Environment;
 
 #[derive(Clone)]
 struct AppState {}

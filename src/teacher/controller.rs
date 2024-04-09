@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::{
     class::{self, model::Class},
     custom::HtmlResponse,
-    exam::{self, model::StudentAnswer},
+    exam::{self},
     middleware::auth::AuthState,
     user::model::User,
     view::render_template,

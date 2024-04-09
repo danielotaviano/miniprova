@@ -1,6 +1,6 @@
 use std::fs;
 
-use minijinja::{context, Environment, Value};
+use minijinja::{context, Environment};
 use serde::Serialize;
 
 pub fn get_template(path: &str) -> Result<&'static str, String> {

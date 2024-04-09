@@ -145,15 +145,6 @@ impl Answer {
         }
     }
 
-    pub fn new_with_id(id: &str, answer: &str, is_correct: &bool, question_id: &str) -> Self {
-        Answer {
-            id: id.to_string(),
-            answer: answer.to_string(),
-            is_correct: is_correct.clone(),
-            question_id: question_id.to_string(),
-        }
-    }
-
     pub fn get_id(&self) -> &String {
         &self.id
     }
@@ -178,66 +169,4 @@ pub struct StudentAnswer {
     pub answer_id: String,
     pub created_at: Option<i64>,
     pub updated_at: Option<i64>,
-}
-
-impl StudentAnswer {
-    pub fn new(
-        student_id: &str,
-        question_id: &str,
-        answer_id: &str,
-        created_at: Option<i64>,
-        updated_at: Option<i64>,
-    ) -> Self {
-        StudentAnswer {
-            student_id: student_id.to_string(),
-            question_id: question_id.to_string(),
-            answer_id: answer_id.to_string(),
-            created_at,
-            updated_at,
-        }
-    }
-
-    pub fn new_with_id(
-        student_id: &str,
-        question_id: &str,
-        answer_id: &str,
-        created_at: Option<i64>,
-        updated_at: Option<i64>,
-    ) -> Self {
-        StudentAnswer {
-            student_id: student_id.to_string(),
-            question_id: question_id.to_string(),
-            answer_id: answer_id.to_string(),
-            created_at,
-            updated_at,
-        }
-    }
-
-    pub fn get_student_id(&self) -> &String {
-        &self.student_id
-    }
-
-    pub fn get_question_id(&self) -> &String {
-        &self.question_id
-    }
-
-    pub fn get_answer_id(&self) -> &String {
-        &self.answer_id
-    }
-
-    pub fn get_created_at(&self) -> Option<i64> {
-        self.created_at
-    }
-
-    pub fn set_created_at(&mut self, created_at: Option<i64>) {
-        self.created_at = created_at;
-    }
-
-    pub fn get_updated_at(&self) -> Option<i64> {
-        self.updated_at
-    }
-
-    pub fn set_updated_at(&mut self, updated_at: Option<i64>) {
-        self.updated_at = updated_at;
-    }
 }
