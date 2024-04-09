@@ -13,8 +13,8 @@
         <form id="examForm">
             <div class="form-group">
                 <label for="name">Class Name</label>
-                <input type="text" class="form-control" id="class_name" name="class_name" value="IMD2020 - FARMACOLOGIA"
-                    disabled>
+                <input type="text" class="form-control" id="class_name" name="class_name"
+                    value="{{context.code}} - {{context.name}}" disabled>
             </div>
             <div class="form-group">
                 <label for="name">Exam Name</label>
@@ -122,13 +122,13 @@
 
 
                 $.ajax({
-                    url: '/teacher/class/{{context}}/create-exam',
+                    url: '/teacher/class/{{context.id}}/create-exam',
                     type: 'POST',
                     data: JSON.stringify(payload),
                     contentType: 'application/json',
                     success: function (response) {
                         alert('Exam created successfully.');
-                        window.location.href = '/teacher/class/{{context}}/exams';
+                        window.location.href = '/teacher/class/{{context.id}}/exams';
                     },
                     error: function (error) {
                         alert('An error occurred. Please try again.');

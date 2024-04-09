@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exams List</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="my-4">{{context.class_name}}</h1>
+    <div class="row">
+      {% for exam in context.exams %}
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">{{exam.name}}</h5>
+            <p class="card-text">
+              Start Date: {{ (exam.start_date|to_seconds|datetimeformat) }}<br>
+              End Date: {{ (exam.end_date|to_seconds|datetimeformat) }}<br>
+            </p>
+            <a href="/teacher/exam/{{exam.id}}/results" class="btn btn-primary">Exam results</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

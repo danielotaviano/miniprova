@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students Results</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="text-center">Students Results</h1>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Student Name</th>
+          <th scope="col">Commitment</th>
+          <th scope="col">First Answer Date</th>
+          <th scope="col">Last Update</th>
+          <th scope="col">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in context.students %}
+        <tr>
+          <td>{{ student.name }}</td>
+          <td>{{ student.answers_count }}/{{ context.total_questions }}</td>
+          <td>{{ student.first_answer_date|to_seconds|datetimeformat }}</td>
+          <td>{{ student.last_update|to_seconds|datetimeformat }}</td>
+          <td>{{ student.correct_answers_count }}/{{ context.total_questions }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>

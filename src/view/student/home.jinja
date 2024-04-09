@@ -14,7 +14,7 @@
     <div class="row">
       <div class="col-md-6">
         <h2>Classes</h2>
-        {% for payload in context %}
+        {% for payload in context.classes_to_subscribe %}
         <div id="accordion">
           <div class="card">
             <div class="card-header" id="heading{{ loop.index }}">
@@ -30,7 +30,7 @@
               <div class="card-body">
                 {{ payload.class.description }}<br>
                 Students Enrolled: {{payload.count}}<br>
-                <form action="/class/enroll" method="POST">
+                <form action="/student/class/enroll" method="POST">
                   <input type="hidden" name="class_id" value="{{ payload.class.id }}">
                   <button class="btn btn-primary">Enroll</button>
                 </form>
@@ -43,31 +43,30 @@
       </div>
       <div class="col-md-6">
         <h2>Online Exams</h2>
-        <div class="card">
+        {% for payload in context.enrolled_classes %}
+        <div class="card mt-1">
           <div class="card-header">
-            Class Code - Class Name
+            {{payload.class.code}} - {{payload.class.name}}
           </div>
           <div class="row" style="display: flex; align-items: start; justify-content: start;">
+            {% for exam in payload.exams %}
             <div class="card-body"
               style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <h5 class="card-title">Prova 01</h5>
-              <p class="card-text">01/02/03 - 01/02/03</p>
-              <a href="#" class="btn btn-primary">Go to Exam</a>
+              <h5 class="card-title">{{exam.name}}</h5>
+              <p class="card-text">{{ exam.start_date|to_seconds|datetimeformat }} - {{
+                exam.end_date|to_seconds|datetimeformat }}</p>
+              {% if now() < exam.start_date|to_seconds %} <a class="btn btn-primary disabled"
+                style="pointer-events: none;" disabled>Go to Exam</a>
+                {% elif now() > exam.end_date|to_seconds %}
+                <a href="/student/exam/{{exam.id}}/result" class="btn btn-primary">See Results</a>
+                {% else %}
+                <a href="/student/exam/{{exam.id}}" class=" btn btn-primary">Go to Exam</a>
+                {% endif %}
             </div>
-            <div class="card-body"
-              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <h5 class="card-title">Prova 01</h5>
-              <p class="card-text">01/02/03 - 01/02/03</p>
-              <a href="#" class="btn btn-primary">Go to Exam</a>
-            </div>
-            <div class="card-body"
-              style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-              <h5 class="card-title">Prova 01</h5>
-              <p class="card-text">01/02/03 - 01/02/03</p>
-              <a href="#" class="btn btn-primary">Go to Exam</a>
-            </div>
+            {% endfor %}
           </div>
         </div>
+        {% endfor %}
       </div>
     </div>
   </div>

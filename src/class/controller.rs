@@ -1,4 +1,5 @@
 use axum::{
+    extract::Path,
     response::{IntoResponse, Redirect},
     Extension,
 };
@@ -6,7 +7,7 @@ use axum_extra::extract::Form;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
-use crate::middleware::auth::AuthState;
+use crate::{custom::HtmlResponse, exam, middleware::auth::AuthState, view::render_template};
 
 use super::{model::Class, service};
 
@@ -89,4 +90,39 @@ pub async fn enroll(
         Err(err) => (StatusCode::BAD_REQUEST, err.to_string()).into_response(),
         Ok(_) => Redirect::to("/student").into_response(),
     }
+}
+
+#[derive(Serialize)]
+struct ListExamsHtmlContextModel {
+    class_name: String,
+    exams: Vec<exam::model::Exam>,
+}
+
+pub async fn list_exams(
+    Extension(current_user): Extension<AuthState>,
+    Path(class_id): Path<String>,
+) -> impl IntoResponse {
+    match service::is_teacher(&current_user.get_user_id(), &class_id).await {
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Ok(false) => return StatusCode::UNAUTHORIZED.into_response(),
+        _ => (),
+    };
+
+    let exams = match exam::service::list_exam_by_class_without_relations(&class_id).await {
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Ok(exams) => exams,
+    };
+
+    let class = match service::get_by_id(&class_id).await {
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Ok(Some(class)) => class,
+    };
+
+    let context = ListExamsHtmlContextModel {
+        class_name: class.get_name().to_string(),
+        exams,
+    };
+
+    render_template("teacher/list-exam", context.into()).to_html_response()
 }

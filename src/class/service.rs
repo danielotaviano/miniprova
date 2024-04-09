@@ -45,3 +45,11 @@ pub async fn enroll_student(student_id: &str, class_id: &str) -> Result<(), Box<
 pub async fn is_teacher(teacher_id: &str, class_id: &str) -> Result<bool, Box<dyn Error>> {
     repository::is_teacher(teacher_id, class_id).await
 }
+
+pub async fn is_student(student_id: &str, class_id: &str) -> Result<bool, Box<dyn Error>> {
+    repository::is_student(student_id, class_id).await
+}
+
+pub async fn get_by_id(class_id: &str) -> Result<Option<Class>, Box<dyn Error>> {
+    repository::get_class(class_id).await
+}

@@ -1,10 +1,18 @@
-use std::error::Error;
+use std::{error::Error, time::SystemTime};
 
 use chrono::DateTime;
+use std::time::UNIX_EPOCH;
 
-use crate::class;
+use crate::{
+    class::{self, model::Class},
+    exam::service,
+    user::model::User,
+};
 
-use super::{model::Exam, repository};
+use super::{
+    model::{Exam, StudentAnswer},
+    repository,
+};
 
 pub async fn save(exam: Exam) -> Result<(), Box<dyn Error>> {
     let questions = exam.get_questions();
@@ -47,4 +55,130 @@ pub async fn save(exam: Exam) -> Result<(), Box<dyn Error>> {
     }
 
     repository::save(exam).await
+}
+
+pub async fn list_exam_group_by_class_without_relations_by_student(
+    student_id: &str,
+) -> Result<Vec<(Class, Vec<Exam>)>, Box<dyn Error>> {
+    repository::list_exam_group_by_class_without_relations_by_student(student_id).await
+}
+
+pub async fn list_exam_by_class_without_relations(
+    class_id: &str,
+) -> Result<Vec<Exam>, Box<dyn Error>> {
+    repository::list_exam_by_class_id_without_relations(class_id).await
+}
+
+pub async fn get_student_exam(
+    exam_id: &str,
+    student_id: &str,
+) -> Result<Option<(Exam, Vec<String>)>, Box<dyn Error>> {
+    let exam = repository::get_with_relations(exam_id)
+        .await?
+        .ok_or_else(|| "Exam not found!")?;
+
+    let is_student = class::service::is_student(student_id, &exam.class_id).await?;
+    if !is_student {
+        return Err("Unauthorized!".into());
+    }
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as i64;
+
+    if !(exam.start_date <= now) {
+        return Err("Exam is not available!".into());
+    }
+
+    let answers = repository::get_student_answers(student_id, exam_id).await?;
+
+    Ok(Some((exam, answers)))
+}
+
+pub async fn get_exam_results_by_teacher(
+    exam_id: &str,
+    teacher_id: &str,
+) -> Result<(Vec<(User, i64, Option<i64>, Option<i64>, i64)>, i64), Box<dyn Error>> {
+    let exam = repository::get_with_relations(exam_id)
+        .await?
+        .ok_or_else(|| "Exam not found!")?;
+
+    let is_teacher = class::service::is_teacher(teacher_id, &exam.class_id).await?;
+    if !is_teacher {
+        return Err("Unauthorized!".into());
+    }
+
+    let results = repository::get_students_results(exam_id).await?;
+    let correct_answers: Vec<_> = exam
+        .questions
+        .iter()
+        .map(|q| {
+            q.answers
+                .iter()
+                .find(|a| a.is_correct())
+                .unwrap()
+                .id
+                .clone()
+        })
+        .collect();
+
+    let final_results: Vec<_> = results
+        .into_iter()
+        .map(|(student, answers)| {
+            let correct_answers_count = answers
+                .iter()
+                .filter(|a| correct_answers.contains(&a.answer_id))
+                .count() as i64;
+
+            (
+                student,
+                answers.len() as i64,
+                answers.iter().map(|a| a.created_at).min().unwrap(),
+                answers.iter().map(|a| a.updated_at).max().unwrap(),
+                correct_answers_count,
+            )
+        })
+        .collect();
+
+    Ok((final_results, exam.questions.len() as i64))
+}
+
+pub async fn save_answer(
+    exam_id: &str,
+    student_id: &str,
+    question_id: &str,
+    answer_id: &str,
+) -> Result<(), Box<dyn Error>> {
+    let exam = repository::get_with_relations(exam_id)
+        .await?
+        .ok_or_else(|| "Exam not found!")?;
+
+    let is_student = class::service::is_student(student_id, &exam.class_id).await?;
+    if !is_student {
+        return Err("Unauthorized!".into());
+    }
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as i64;
+
+    if !(exam.start_date <= now && exam.end_date >= now) {
+        return Err("Exam is not available!".into());
+    }
+
+    let question = exam
+        .questions
+        .iter()
+        .find(|q| q.id == question_id)
+        .ok_or_else(|| "Question not found!")?;
+
+    question
+        .answers
+        .iter()
+        .find(|a| a.id == answer_id)
+        .ok_or_else(|| "Answer not found!")?;
+
+    repository::save_answer(student_id, question_id, answer_id).await
 }

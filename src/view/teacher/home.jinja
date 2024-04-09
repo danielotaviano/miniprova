@@ -45,7 +45,7 @@
     <div class="column">
       <div class="col-md-8">
         <h2>Create New Class</h2>
-        <form action="/class" method="POST">
+        <form action="/teacher/class" method="POST">
           <div class="form-group">
             <label for="className">Class Code</label>
             <input name="code" type="text" class="form-control" id="className" placeholder="Enter class name">
@@ -77,6 +77,7 @@
               <p>Class Description: {{ payload.class.description }}</p>
               <p>Number of Students Enrolled: {{payload.count}}</p>
               <a href="/teacher/class/{{ payload.class.id }}/create-exam" class="btn btn-primary">Create Exam</a>
+              <a href="/teacher/class/{{ payload.class.id }}/exams" class="btn btn-primary">Class Exams</a>
             </div>
           </li>
           {% endfor %}

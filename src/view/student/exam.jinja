@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        .exam-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .status-success {
+            color: green;
+        }
+
+        .status-error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container exam-container">
+        <h1 class="text-center">Exam</h1>
+        <p id="countdown"></p>
+        <p id="status" class="status-success">Exam saved</p>
+        <form>
+            {% for question in context.exam.questions %}
+            {% set outer_loop = loop %}
+            <div class="question">
+                <p><b>{{outer_loop.index}}.</b> {{question.question}}</p>
+                {% for answer in question.answers %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="question{{outer_loop.index}}"
+                        id="question{{outer_loop.index}}Option{{loop.index}}" value="{{answer.id}}" required
+                        onchange="saveAnswer('{{context.exam.id}}', '{{question.id}}', this.value)" {% if answer.id in
+                        context.answers %}checked{% endif %}>
+                    <label class="form-check-label" for="question{{outer_loop.index}}Option{{loop.index}}">
+                        {{answer.answer}}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Finish Test</button>
+        </form>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+    <script>
+        function saveAnswer(examId, questionId, answerId) {
+            var status = document.getElementById('status');
+            status.textContent = 'Trying to save...';
+            status.className = '';
+
+            fetch(`/student/exam/${examId}/${questionId}/save-answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ answer_id: answerId }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    status.textContent = 'Exam saved';
+                    status.className = 'status-success';
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    var retryInSeconds = 5;
+                    var retryInterval = setInterval(() => {
+                        status.textContent = 'Error: will retry in ' + retryInSeconds + ' seconds';
+                        status.className = 'status-error';
+                        retryInSeconds--;
+                        if (retryInSeconds < 0) {
+                            clearInterval(retryInterval);
+                            saveAnswer(examId, questionId, answerId);
+                        }
+                    }, 1000);
+                });
+        }
+    </script>
+    <script>
+        var countdown = document.getElementById('countdown');
+
+        var end_date = new Date({{ context.exam.end_date }});
+        var now = new Date();
+
+        var diff = end_date - now;
+
+        var countdownFunction = setInterval(function () {
+            diff -= 1000;
+            var hours = Math.floor(diff / (1000 * 60 * 60));
+            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            countdown.textContent = "Time left: " + hours + "h " + minutes + "m " + seconds + "s";
+
+            if (diff < 0) {
+                clearInterval(countdownFunction);
+                countdown.textContent = "EXAM ENDED";
+                window.location.href = '/student';
+
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>

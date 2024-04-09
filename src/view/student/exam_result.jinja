@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        .exam-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: auto;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .correct-answer {
+            background-color: #d4edda;
+            /* light green */
+        }
+
+        .incorrect-answer {
+            background-color: #f8d7da;
+            /* light red */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container exam-container">
+        <h1 class="text-center">Exam Results</h1>
+        <p><b>Score:</b> {{ context.score }}</p>
+        <p><b>Correct Answers:</b> {{ context.correct_answers_count }} out of {{ context.total_questions }}</p>
+        {% for question in context.exam.questions %}
+        {% set outer_loop = loop %}
+        <div class="question">
+            <p><b>{{outer_loop.index}}.</b> {{question.question}}</p>
+            {% for answer in question.answers %}
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="question{{outer_loop.index}}"
+                    id="question{{outer_loop.index}}Option{{loop.index}}" value="{{answer.id}}" disabled {% if answer.id
+                    in context.answers %}checked{% endif %}>
+                <label
+                    class="form-check-label {% if answer.id in context.correct_answers %}correct-answer{% elif answer.id in context.answers %}incorrect-answer{% endif %}"
+                    for="question{{outer_loop.index}}Option{{loop.index}}">
+                    {{answer.answer}}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>

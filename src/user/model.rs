@@ -16,6 +16,14 @@ impl User {
         }
     }
 
+    pub fn new_with_id(id: &str, name: &str, avatar_url: &str) -> Self {
+        Self {
+            id: id.to_string(),
+            name: name.to_string(),
+            avatar_url: avatar_url.to_string(),
+        }
+    }
+
     pub fn get_id(&self) -> &String {
         &self.id
     }

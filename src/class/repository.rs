@@ -178,3 +178,27 @@ pub async fn is_teacher(teacher_id: &str, class_id: &str) -> Result<bool, Box<dy
 
     Ok(is)
 }
+
+pub async fn is_student(student_id: &str, class_id: &str) -> Result<bool, Box<dyn Error>> {
+    let is = sqlx::query!(
+        r#"
+        select
+            exists (
+            select
+                1
+            from
+                class_student cs
+            where
+                cs.class_id = $1
+                and cs.student_id = $2
+                ) "exists";
+        "#,
+        class_id,
+        student_id
+    )
+    .fetch_one(get_database())
+    .await?
+    .exists
+    .unwrap_or(false);
+    Ok(is)
+}

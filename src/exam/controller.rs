@@ -157,5 +157,11 @@ pub async fn create_html(
         return Redirect::to("/teacher").into_response();
     }
 
-    render_template("exam/create", params.class_id.into()).to_html_response()
+    let class = match class::service::get_by_id(&params.class_id).await {
+        Ok(Some(class)) => class,
+        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
+        Err(_) => return StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    };
+
+    render_template("exam/create", class.into()).to_html_response()
 }

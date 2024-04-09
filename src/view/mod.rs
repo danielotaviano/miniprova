@@ -1,6 +1,6 @@
 use std::fs;
 
-use minijinja::render;
+use minijinja::{context, Environment, Value};
 use serde::Serialize;
 
 pub fn get_template(path: &str) -> Result<&'static str, String> {
@@ -30,8 +30,16 @@ pub fn render_template<T: Serialize>(template_name: &str, data: Option<T>) -> St
     let template = get_template(template_name)
         .unwrap_or_else(|_| panic!("Failed to get template: {}", template_name));
 
+    let mut env = Environment::new();
+    env.add_filter("to_seconds", |value: i64| -> i64 { value / 1000 });
+    minijinja_contrib::add_to_environment(&mut env);
+
+    env.add_template(template_name, template).unwrap();
+
+    let template = env.get_template(template_name).unwrap();
+
     match data {
-        Some(context) => render!(template, context),
-        None => render!(template),
+        Some(context) => template.render(context! { context => context }).unwrap(),
+        None => template.render(context! {}).unwrap(),
     }
 }
